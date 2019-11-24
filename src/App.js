@@ -1,3 +1,5 @@
+import React, { Component }  from 'react';
+
 // Store Constructor: Factory
 function createStore(reducer, initialState) {
   let state = initialState;
@@ -41,48 +43,93 @@ const initialState = { messages: [] };
 // Redux Store
 const store = createStore(reducer, initialState);
 
-const listener = () => {
-  console.log("Current state: ");
-  console.log(store.getState());
-};
 
-// listener now subscribe
-store.subscribe(listener);
+// React Parent Component
+class App extends React.Component {
+  componentDidMount() {
+    store.subscribe(() => this.forceUpdate());
+  }
 
-// type: ACTION ✨🚀
-const addMessageAction1 = {
-  type: "ADD_MESSAGE",
-  message: "How do you read?"
-};
+  render() {
+    const messages = store.getState().messages;
 
-store.dispatch(addMessageAction1);
-/** @desc: `listener()` is called */
-// const stateV1 = store.getState();
+    return (
+      <div className='ui segment'>
+        <MessageView messages={messages} />
+        <MessageInput />
+      </div>
+    )
+  }
+}
 
-// type: ACTION ✨🚀
-const addMessageAction2 = {
-  type: "ADD_MESSAGE",
-  message: "I read you loud and clear, Houston."
-};
+// MessageInput Component
+class MessageInput extends React.Component {
+   state = {
+     value: '',
+   };
 
-store.dispatch(addMessageAction2);
-/** @desc: `listener()` is called */
-// const stateV2 = store.getState();
+   onChange = (e) => {
+      this.setState({
+        value: e.target.value,
+      })
+    };
 
-// console.log('state v1:');
-// console.log(stateV1);
-// console.log('state v2:');
-// console.log(stateV2);
+    handleSubmit = () => {
+      store.dispatch({
+        type: 'ADD_MESSAGE',
+        message: this.state.value,
+      });
+      this.setState({
+        value: '',
+      })
+    }
 
-// type: ACTION ✨🚀
-const deleteMessageAction = {
-  type: "DELETE_MESSAGE",
-  index: 0
-};
+    render() {
+      return (
+        <div className='ui input'>
+          <input
+            onChange={this.onChange}
+            value={this.state.value}
+            type='text'
+            />
 
-store.dispatch(deleteMessageAction);
-/** @desc: `listener()` is called */
-// const stateV3 = store.getState();
+            <button
+              onClick={this.handleSubmit}
+              className='ui primary button'
+              type='submit'
+              >
+              Submit
+            </button>
+        </div>
+      );
+    }
+  }
 
-// console.log('State v3:');
-// console.log(stateV3);
+  // MessageView Component
+  class MessageView extends React.Component {
+    handleClick = (index) => {
+      store.dispatch(
+        // Action Object: Delete
+        { type: 'DELETE_MESSAGE', index: index, });
+    };
+
+    render() {
+      const messages = this.props.messages.map((message, index) => (
+        <div
+          className='comment'
+          key={index}
+          onClick={() => this.handleClick(index)}
+          >
+          {message}
+        </div>
+      ));
+
+      return (
+        <div className='ui comments'>
+          {messages}
+        </div>
+      )
+    }
+  }
+
+  export default App;
